@@ -35,13 +35,6 @@ jobs:
           rm -f ato.tar.gz
 
       - name: Publish to Ato Store
-        env:
-          ATO_SIGNING_KEY_JSON: ${{ secrets.ATO_SIGNING_KEY_JSON }}
         run: |
           set -euo pipefail
-          if [[ -z "${ATO_SIGNING_KEY_JSON:-}" ]]; then
-            echo "Missing required secret: ATO_SIGNING_KEY_JSON" >&2
-            echo "Generate JSON key with: ato key gen --json" >&2
-            exit 1
-          fi
           ato publish --ci
