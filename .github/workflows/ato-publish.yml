@@ -23,8 +23,8 @@ jobs:
 
       - name: Install Ato CLI (Pinned & Verified)
         env:
-          ATO_VERSION: "0.3.2"
-          ATO_CHECKSUM: "953d96c9f575bf052fdd09c246c89b86cb4dbc39eec02a83b454744e5b9a822a"
+          ATO_VERSION: "0.3.3"
+          ATO_CHECKSUM: "2186665336630dfdccab773a5e55d7b824376864f7b93f1d3bd8dd6fff735b3d"
         run: |
           set -euo pipefail
           curl -fsSL -o ato.tar.gz "https://dl.ato.run/ato/releases/${ATO_VERSION}/ato-x86_64-unknown-linux-gnu.tar.gz"
@@ -37,4 +37,6 @@ jobs:
       - name: Publish to Ato Store
         run: |
           set -euo pipefail
-          ato publish --ci
+          # Backward-compatible: old ato binaries still require a signing key.
+          # Newer keyless binaries ignore this env and continue with OIDC-only provenance.
+          ATO_SIGNING_KEY_JSON="$(ato key gen --json)" ato publish --ci
