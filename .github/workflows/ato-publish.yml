@@ -23,8 +23,8 @@ jobs:
 
       - name: Install Ato CLI (Pinned & Verified)
         env:
-          ATO_VERSION: "0.3.1"
-          ATO_CHECKSUM: "d73597860bb335fe78d06ae9090449cb24a81a81bba4ccff0cba22fedd732514"
+          ATO_VERSION: "0.3.2"
+          ATO_CHECKSUM: "953d96c9f575bf052fdd09c246c89b86cb4dbc39eec02a83b454744e5b9a822a"
         run: |
           set -euo pipefail
           curl -fsSL -o ato.tar.gz "https://dl.ato.run/ato/releases/${ATO_VERSION}/ato-x86_64-unknown-linux-gnu.tar.gz"
