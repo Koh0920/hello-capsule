@@ -23,7 +23,7 @@ jobs:
 
       - name: Install Ato CLI (Pinned & Verified)
         env:
-          ATO_VERSION: "0.3.0"
+          ATO_VERSION: "0.3.1"
           ATO_CHECKSUM: "d73597860bb335fe78d06ae9090449cb24a81a81bba4ccff0cba22fedd732514"
         run: |
           set -euo pipefail
