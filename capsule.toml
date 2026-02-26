@@ -1,6 +1,6 @@
 schema_version = "0.2"
 name = "hello-capsule"
-version = "1.0.3"
+version = "1.0.4"
 description = "A minimal sample app demonstrating Capsule app structure"
 type = "app"
 default_target = "static"
