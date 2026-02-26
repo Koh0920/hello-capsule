@@ -24,28 +24,15 @@ jobs:
       - name: Install Ato CLI (Pinned & Verified)
         env:
           ATO_VERSION: "0.3.0"
-          ATO_CHECKSUM: "65abe57d0af5dbb5879bfafbdf66ae2f99afaa21f50ec98121b6d0f8ae95f461"
+          ATO_CHECKSUM: "d73597860bb335fe78d06ae9090449cb24a81a81bba4ccff0cba22fedd732514"
         run: |
           set -euo pipefail
-          curl -fsSL -o ato.tar.gz "https://stg-dl.ato.run/ato/latest/ato-x86_64-unknown-linux-gnu.tar.gz"
+          curl -fsSL -o ato.tar.gz "https://dl.ato.run/ato/releases/${ATO_VERSION}/ato-x86_64-unknown-linux-gnu.tar.gz"
           echo "${ATO_CHECKSUM}  ato.tar.gz" | sha256sum -c -
           tar -xzf ato.tar.gz
           chmod +x ./ato
           sudo mv ./ato /usr/local/bin/ato
           rm -f ato.tar.gz
-
-      - name: Request GitHub OIDC token
-        env:
-          OIDC_AUDIENCE: "api.ato.run"
-        run: |
-          set -euo pipefail
-          resp="$(curl -fsSL -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=${OIDC_AUDIENCE}")"
-          token="$(printf '%s' "$resp" | python3 -c 'import json,sys; print(json.load(sys.stdin)["value"])')"
-          if [ -z "$token" ]; then
-            echo "Failed to acquire OIDC token" >&2
-            exit 1
-          fi
-          echo "ATO_OIDC_TOKEN=$token" >> "$GITHUB_ENV"
 
       - name: Publish to Ato Store
         run: ato publish --ci
