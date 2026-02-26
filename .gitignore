@@ -1,0 +1,11 @@
+# macOS
+.DS_Store
+
+# Capsule build artifacts
+*.capsule
+*.sync
+
+# Archives
+*.tar
+*.tar.gz
+*.zip

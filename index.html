@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hello Capsule</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #333;
+        }
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        header h1 {
+            font-size: 1.5rem;
+            color: #667eea;
+        }
+        main {
+            flex: 1;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+        .context-grid {
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+        .context-grid dt {
+            font-weight: 600;
+            color: #666;
+        }
+        .context-grid dd {
+            word-break: break-all;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.85rem;
+            color: #333;
+        }
+        .content-area {
+            flex: 1;
+            min-height: 200px;
+        }
+        #content {
+            width: 100%;
+            height: 100%;
+            min-height: 200px;
+            white-space: pre-wrap;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        .status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        .status.ok {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .status.loading {
+            background: #fff3cd;
+            color: #856404;
+        }
+        footer {
+            background: rgba(0, 0, 0, 0.2);
+            color: white;
+            text-align: center;
+            padding: 1rem;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🎉 Hello Capsule</h1>
+    </header>
+    
+    <main>
+        <div class="card">
+            <h2>📋 Capsule Context</h2>
+            <dl class="context-grid">
+                <dt>Data URL</dt>
+                <dd id="ctx-data-url">-</dd>
+                <dt>App URL</dt>
+                <dd id="ctx-app-url">-</dd>
+                <dt>Data DID</dt>
+                <dd id="ctx-data-did">-</dd>
+                <dt>Data Type</dt>
+                <dd id="ctx-data-type">-</dd>
+                <dt>User DID</dt>
+                <dd id="ctx-user-did">-</dd>
+                <dt>Entitlements</dt>
+                <dd id="ctx-entitlements">-</dd>
+                <dt>Write</dt>
+                <dd id="ctx-write">-</dd>
+                <dt>Session</dt>
+                <dd id="ctx-session">-</dd>
+            </dl>
+        </div>
+
+        <div class="card content-area">
+            <h2>📄 Data Content <span id="status" class="status loading">Loading...</span></h2>
+            <pre id="content">Fetching data...</pre>
+        </div>
+    </main>
+
+    <footer>
+        Hello Capsule v1.0.0 | Powered by Capsule Runtime
+    </footer>
+
+    <script>
+        // Display context
+        function displayContext() {
+            const ctx = window.capsule || {};
+            document.getElementById('ctx-data-url').textContent = ctx.dataUrl || '(not set)';
+            document.getElementById('ctx-app-url').textContent = ctx.appUrl || '(not set)';
+            document.getElementById('ctx-data-did').textContent = ctx.dataDid || '(not set)';
+            document.getElementById('ctx-data-type').textContent = ctx.dataType || '(not set)';
+            document.getElementById('ctx-user-did').textContent = ctx.userDid || '(not set)';
+            document.getElementById('ctx-entitlements').textContent = 
+                (ctx.entitlements && ctx.entitlements.length > 0) 
+                    ? ctx.entitlements.join(', ') 
+                    : '(none)';
+            document.getElementById('ctx-write').textContent = 
+                ctx.writeAllowed ? '✅ Allowed' : '🔒 Read-only';
+            document.getElementById('ctx-session').textContent = ctx.sessionId || '(not set)';
+        }
+
+        // Fetch and display data
+        async function loadData() {
+            const statusEl = document.getElementById('status');
+            const contentEl = document.getElementById('content');
+            
+            const ctx = window.capsule;
+            if (!ctx || !ctx.dataUrl) {
+                statusEl.className = 'status error';
+                statusEl.textContent = 'No Context';
+                contentEl.textContent = 'window.capsule is not available.\n\nThis app should be opened through ato-desktop with a data capsule.';
+                return;
+            }
+
+            try {
+                // Try to fetch payload content
+                const payloadUrl = `${ctx.dataUrl}/payload/`;
+                const response = await fetch(payloadUrl);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const text = await response.text();
+                statusEl.className = 'status ok';
+                statusEl.textContent = 'Loaded';
+                contentEl.textContent = text || '(empty)';
+            } catch (err) {
+                statusEl.className = 'status error';
+                statusEl.textContent = 'Error';
+                contentEl.textContent = `Failed to load data:\n${err.message}\n\nData URL: ${ctx.dataUrl}`;
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            displayContext();
+            loadData();
+        });
+
+        // Listen for context updates via postMessage
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'capsule:context') {
+                window.capsule = event.data.context;
+                displayContext();
+                loadData();
+            }
+        });
+    </script>
+</body>
+</html>
