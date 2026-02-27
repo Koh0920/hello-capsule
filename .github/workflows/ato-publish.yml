@@ -23,8 +23,8 @@ jobs:
 
       - name: Install Ato CLI (Pinned & Verified)
         env:
-          ATO_VERSION: "0.3.4"
-          ATO_CHECKSUM: "c9dd13c10bdd745f30b28bc9ee63c6f8ea184eae9f501a71337a30bdb4f53a16"
+          ATO_VERSION: "0.3.5"
+          ATO_CHECKSUM: "8ea2e149745d89e68a0211c4353f33243ef2388354396ad0424500cd39e02343"
         run: |
           set -euo pipefail
           curl -fsSL -o ato.tar.gz "https://dl.ato.run/ato/releases/${ATO_VERSION}/ato-x86_64-unknown-linux-gnu.tar.gz"
@@ -39,13 +39,12 @@ jobs:
           ATO_SIGNING_KEY_JSON: ${ secrets.ATO_SIGNING_KEY_JSON }
         run: |
           set -euo pipefail
-          if [ -z "${ATO_SIGNING_KEY_JSON:-}" ]; then
-            echo "Missing required secret: ATO_SIGNING_KEY_JSON"
-            echo "Run local \`ato publish\` once to auto-provision it, or set manually via:"
-            echo "  gh secret set ATO_SIGNING_KEY_JSON --repo <owner/repo> < ~/.capsule/keys/publisher-signing-key.json"
-            exit 1
+          if [ -n "${ATO_SIGNING_KEY_JSON:-}" ]; then
+            tmp_key="$(mktemp /tmp/ato-ci-signing-key.XXXXXX)"
+            printf '%s' "$ATO_SIGNING_KEY_JSON" > "$tmp_key"
+            ATO_SIGNING_KEY="$tmp_key" ato publish --ci
+            rm -f "$tmp_key"
+          else
+            echo "ATO_SIGNING_KEY_JSON is not set; continuing in keyless mode."
+            ato publish --ci
           fi
-          tmp_key="$(mktemp /tmp/ato-ci-signing-key.XXXXXX)"
-          printf '%s' "$ATO_SIGNING_KEY_JSON" > "$tmp_key"
-          ATO_SIGNING_KEY="$tmp_key" ato publish --ci
-          rm -f "$tmp_key"
