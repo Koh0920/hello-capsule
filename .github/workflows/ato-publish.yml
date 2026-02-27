@@ -23,8 +23,8 @@ jobs:
 
       - name: Install Ato CLI (Pinned & Verified)
         env:
-          ATO_VERSION: "0.3.5"
-          ATO_CHECKSUM: "8ea2e149745d89e68a0211c4353f33243ef2388354396ad0424500cd39e02343"
+          ATO_VERSION: "0.3.7"
+          ATO_CHECKSUM: "e622807c0ad8f573165ca752b78ea1be94c1d0f23587b6433adca18b0c43cd1d"
         run: |
           set -euo pipefail
           curl -fsSL -o ato.tar.gz "https://dl.ato.run/ato/releases/${ATO_VERSION}/ato-x86_64-unknown-linux-gnu.tar.gz"
@@ -35,16 +35,4 @@ jobs:
           rm -f ato.tar.gz
 
       - name: Publish to Ato Store
-        env:
-          ATO_SIGNING_KEY_JSON: ${ secrets.ATO_SIGNING_KEY_JSON }
-        run: |
-          set -euo pipefail
-          if [ -n "${ATO_SIGNING_KEY_JSON:-}" ]; then
-            tmp_key="$(mktemp /tmp/ato-ci-signing-key.XXXXXX)"
-            printf '%s' "$ATO_SIGNING_KEY_JSON" > "$tmp_key"
-            ATO_SIGNING_KEY="$tmp_key" ato publish --ci
-            rm -f "$tmp_key"
-          else
-            echo "ATO_SIGNING_KEY_JSON is not set; continuing in keyless mode."
-            ato publish --ci
-          fi
+        run: ato publish --ci
