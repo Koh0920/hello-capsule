@@ -1,4 +1,4 @@
-schema_version = "0.2"
+schema_version = "0.3"
 name = "hello-capsule"
 version = "1.0.12"
 description = "A minimal sample app demonstrating Capsule app structure"
