@@ -1,0 +1,13 @@
+schema_version = "0.3"
+name = "hello-capsule"
+version = "0.1.4"
+type = "app"
+
+runtime = "web"
+driver = "static"
+run = "."
+port = 8080
+working_dir = "."
+
+[metadata]
+description = "A minimal sample app demonstrating Capsule app structure"
