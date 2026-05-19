@@ -85,8 +85,4 @@ def get_available_modes() -> list[dict]:
 
 
 def detect_default_mode() -> str:
-    if settings.OPENAI_API_KEY:
-        return "api"
-    if check_ollama_reachable():
-        return "local"
     return "demo"

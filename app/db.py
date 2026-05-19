@@ -1,7 +1,12 @@
 import os
 import sqlite3
+from datetime import datetime, timezone
 
 from app import settings
+
+
+def _now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
 SQLITE_PATH = os.environ.get(
@@ -68,9 +73,10 @@ class SQLiteAdapter(DatabaseAdapter):
 
     def create_note(self, body: str) -> dict:
         c = self._conn()
+        ts = _now_iso()
         cur = c.execute(
-            "INSERT INTO notes (body, created_at) VALUES (?, datetime('now'))",
-            (body,),
+            "INSERT INTO notes (body, created_at) VALUES (?, ?)",
+            (body, ts),
         )
         c.commit()
         row = c.execute("SELECT * FROM notes WHERE id = ?", (cur.lastrowid,)).fetchone()

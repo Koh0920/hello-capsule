@@ -54,14 +54,14 @@ export const scenes: Scene[] = [
     id: "command",
     robotMood: "pointing_left",
     speech:
-      "This app starts from a GitHub repository. No manual setup tour first.",
+      "This app starts from a GitHub repository — no manual setup steps.",
     visibleObjects: ["command"],
     primaryAction: { label: "Next", action: "next" },
   },
   {
     id: "backend",
     robotMood: "pointing_right",
-    speech: "A Python backend is running right now. Let's check it.",
+    speech: "A Python backend is running. Watch it answer its own health check.",
     visibleObjects: ["runtime", "apiPulse"],
     primaryAction: { label: "Try API", action: "try-api" },
   },
@@ -75,14 +75,14 @@ export const scenes: Scene[] = [
   {
     id: "database",
     robotMood: "thinking",
-    speech: "I can store state in a database. Try writing a note.",
+    speech: "Let's save something to the database. Try writing a note.",
     visibleObjects: ["database", "noteForm"],
     primaryAction: { label: "Save Note", action: "save-note" },
   },
   {
     id: "ai",
     robotMood: "talking",
-    speech: "I can answer with demo mode, local AI, or an API.",
+    speech: "I can answer in three ways: a built-in demo, your local Ollama, or an OpenAI-compatible API. Demo works offline.",
     visibleObjects: ["aiModes", "chat"],
     primaryAction: { label: "Ask AI", action: "ask-ai" },
   },
@@ -98,7 +98,7 @@ export const scenes: Scene[] = [
     id: "finish",
     robotMood: "happy",
     speech:
-      "You've seen the full tour. Try running it yourself!",
+      "Copy the command below to share this capsule with someone else.",
     visibleObjects: [],
     primaryAction: { label: "Copy Command", action: "copy-command" },
   },

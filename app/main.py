@@ -1,9 +1,11 @@
-import os
+import shutil
+import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 import app.ai as ai
@@ -66,6 +68,8 @@ async def ai_modes():
 
 @app.post("/api/chat")
 async def chat(body: ChatRequest):
+    if not body.message.strip():
+        raise HTTPException(status_code=422, detail="message must not be empty")
     mode = body.mode or "demo"
     try:
         reply = ai.reply(body.message, mode)
@@ -87,17 +91,71 @@ async def reset():
     db.reset()
 
 
-
 DIST_DIR = Path(__file__).resolve().parent.parent / "dist"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+FALLBACK_HTML = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Capsule Guide — Frontend Not Built</title>
+<style>
+  body{font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#f8f9fa;color:#333}
+  .card{background:#fff;border-radius:12px;padding:2rem;max-width:520px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+  h1{margin-top:0;font-size:1.3rem}
+  code{background:#e9ecef;padding:2px 6px;border-radius:4px;font-size:.9em}
+  pre{background:#1e1e1e;color:#d4d4d4;padding:1rem;border-radius:8px;overflow-x:auto}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Frontend not built yet</h1>
+  <p>The Capsule Guide frontend could not be built automatically.
+     This usually means <code>node</code> and <code>npm</code> are not available in the runtime environment.</p>
+  <p>To build manually, run:</p>
+  <pre>npm install && npm run build</pre>
+  <p>Then restart the capsule or reload this page.</p>
+</div>
+</body>
+</html>
+"""
+
+
+class _FallbackApp:
+    def __init__(self, html: str):
+        self.body = html.encode("utf-8")
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http":
+            await send({"type": "http.response.start", "status": 200, "headers": [[b"content-type", b"text/html; charset=utf-8"]]})
+            await send({"type": "http.response.body", "body": self.body})
+
+
+def _try_self_heal_build():
+    if DIST_DIR.is_dir():
+        return True
+    print("[capsule-guide] dist/ not found — attempting self-heal build…")
+    npm = shutil.which("npm")
+    if not npm:
+        print("[capsule-guide] npm not found in PATH — skipping self-heal.")
+        return False
+    root = str(PROJECT_ROOT)
+    try:
+        subprocess.run([npm, "install"], cwd=root, check=True, capture_output=True, text=True, timeout=120)
+        subprocess.run([npm, "run", "build"], cwd=root, check=True, capture_output=True, text=True, timeout=120)
+        print("[capsule-guide] Self-heal build succeeded.")
+        return DIST_DIR.is_dir()
+    except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired) as exc:
+        print(f"[capsule-guide] Self-heal build failed: {exc}")
+        return False
 
 
 @app.on_event("startup")
 async def startup():
     db.init_db()
-    if not DIST_DIR.is_dir():
-        print(f"[capsule-guide] WARNING: dist/ not found at {DIST_DIR}")
-        print("[capsule-guide] The frontend UI will not be available.")
+    built = _try_self_heal_build()
+    if built:
+        app.mount("/", StaticFiles(directory=str(DIST_DIR), html=True), name="static")
     else:
-        app.mount(
-            "/", StaticFiles(directory=str(DIST_DIR), html=True), name="static"
-        )
+        print("[capsule-guide] Serving fallback page at / — frontend not available.")
+        app.mount("/", _FallbackApp(FALLBACK_HTML), name="fallback")

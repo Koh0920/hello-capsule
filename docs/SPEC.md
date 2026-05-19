@@ -204,7 +204,9 @@ default_target = "main"
 runtime = "source"
 driver = "python"
 runtime_version = "3.11"
-run = "app.main:app"
+runtime_tools = { node = "20" }
+build = "npm install && npm run build"
+run = "python -m uvicorn app.main:app --host 127.0.0.1 --port 8000"
 port = 8000
 
 [isolation]
