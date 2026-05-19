@@ -1,6 +1,23 @@
 # macOS
 .DS_Store
 
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# TypeScript
+tsconfig.tsbuildinfo
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Database
+data/*.db
+
 # Capsule build artifacts
 *.capsule
 *.sync

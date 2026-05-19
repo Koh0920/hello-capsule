@@ -1,13 +1,31 @@
 schema_version = "0.3"
 name = "hello-capsule"
-version = "0.1.4"
+version = "0.2.0"
 type = "app"
+default_target = "main"
 
-runtime = "web"
-driver = "static"
-run = "."
-port = 8080
-working_dir = "."
+[targets.main]
+runtime = "source"
+driver = "python"
+runtime_version = "3.11"
+runtime_tools = { node = "20" }
+build = "npm install && npm run build"
+run = "python -m uvicorn app.main:app --host 127.0.0.1 --port 8000"
+port = 8000
 
-[metadata]
-description = "A minimal sample app demonstrating Capsule app structure"
+[isolation]
+allow_env = [
+    "DATABASE_URL",
+    "OPENAI_API_KEY",
+    "OPENAI_BASE_URL",
+    "OPENAI_MODEL",
+    "OLLAMA_BASE_URL",
+    "OLLAMA_MODEL"
+]
+
+[network]
+egress_allow = [
+    "api.openai.com",
+    "localhost",
+    "127.0.0.1"
+]
