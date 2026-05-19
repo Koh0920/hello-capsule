@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSceneMachine } from "./guide/scene-machine";
-import { getRuntime, getNotes, createNote, postChat, getAiModes } from "./api/client";
+import { getRuntime, getNotes, createNote, postChat, getAiModes, getDatabase } from "./api/client";
 import type { RuntimeResponse, Note, AiMode } from "./api/types";
 import type { RobotMood } from "./guide/scenes";
 import { AppShell } from "./components/AppShell";
@@ -35,6 +35,9 @@ export default function App() {
   const [aiModes, setAiModes] = useState<AiMode[]>([]);
   const [selectedAiMode, setSelectedAiMode] = useState<string>("demo");
 
+  const [dbKind, setDbKind] = useState<string>("sqlite");
+  const [dbUrlLabel, setDbUrlLabel] = useState<string>("");
+
   useEffect(() => {
     if (currentScene.id === "backend") {
       getRuntime()
@@ -45,6 +48,9 @@ export default function App() {
       getNotes()
         .then(setNotes)
         .catch(() => setNotes([]));
+      getDatabase()
+        .then((d) => { setDbKind(d.kind); setDbUrlLabel(d.url_label); })
+        .catch(() => {});
     }
     if (currentScene.id === "ai") {
       getAiModes()
@@ -139,6 +145,8 @@ export default function App() {
             aiModes={aiModes}
             selectedAiMode={selectedAiMode}
             onSelectAiMode={setSelectedAiMode}
+            dbKind={dbKind}
+            dbUrlLabel={dbUrlLabel}
           />
         }
         bar={

@@ -39,10 +39,10 @@ async def get_runtime():
 @app.get("/api/database")
 async def get_database():
     return {
-        "kind": "sqlite",
-        "url_label": "data/hello-capsule.db",
+        "kind": db.get_kind(),
+        "url_label": db.get_url_label(),
         "notes_count": db.count_notes(),
-        "postgres_enabled": False,
+        "postgres_enabled": db.get_kind() == "postgres",
     }
 
 
@@ -84,12 +84,7 @@ async def chat(body: ChatRequest):
 
 @app.post("/api/reset", status_code=204)
 async def reset():
-    db.init_db()
-    conn = db.get_db()
-    conn.execute("DELETE FROM notes")
-    conn.execute("DELETE FROM guide_events")
-    conn.commit()
-    conn.close()
+    db.reset()
 
 
 

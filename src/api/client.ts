@@ -1,4 +1,4 @@
-import type { HealthResponse, RuntimeResponse, Note, ChatResponse, AiModesResponse } from "./types";
+import type { HealthResponse, RuntimeResponse, Note, ChatResponse, AiModesResponse, DatabaseResponse } from "./types";
 
 const BASE = "/api";
 
@@ -17,6 +17,10 @@ export function getHealth() {
 
 export function getRuntime() {
   return fetchJSON<RuntimeResponse>("/runtime");
+}
+
+export function getDatabase() {
+  return fetchJSON<DatabaseResponse>("/database");
 }
 
 export function getNotes() {

@@ -18,6 +18,8 @@ interface FloatingObjectsLayerProps {
   aiModes?: AiMode[];
   selectedAiMode?: string;
   onSelectAiMode?: (id: string) => void;
+  dbKind?: string;
+  dbUrlLabel?: string;
 }
 
 type RenderCtx = FloatingObjectsLayerProps;
@@ -37,6 +39,8 @@ function renderObject(id: FloatingObjectId, ctx: RenderCtx) {
           onSave={ctx.onSaveNote ?? (() => {})}
           saving={ctx.saving ?? false}
           savedNote={ctx.savedNote ?? null}
+          dbKind={ctx.dbKind ?? "sqlite"}
+          dbUrlLabel={ctx.dbUrlLabel ?? ""}
         />
       );
     case "aiModes":

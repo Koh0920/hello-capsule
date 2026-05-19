@@ -7,9 +7,21 @@ interface DatabaseFlowProps {
   onSave: (body: string) => void;
   saving: boolean;
   savedNote: Note | null;
+  dbKind: string;
+  dbUrlLabel: string;
 }
 
-export function DatabaseFlow({ notes, onSave, saving, savedNote }: DatabaseFlowProps) {
+const kindStyles: Record<string, string> = {
+  sqlite: "bg-amber-50 text-amber-700 border-amber-200",
+  postgres: "bg-blue-50 text-blue-700 border-blue-200",
+};
+
+const kindLabels: Record<string, string> = {
+  sqlite: "SQLite",
+  postgres: "PostgreSQL",
+};
+
+export function DatabaseFlow({ notes, onSave, saving, savedNote, dbKind, dbUrlLabel }: DatabaseFlowProps) {
   const [input, setInput] = useState("");
 
   const handleSubmit = (e: FormEvent) => {
@@ -18,6 +30,9 @@ export function DatabaseFlow({ notes, onSave, saving, savedNote }: DatabaseFlowP
     onSave(input.trim());
     setInput("");
   };
+
+  const kindStyle = kindStyles[dbKind] ?? kindStyles.sqlite;
+  const kindLabel = kindLabels[dbKind] ?? dbKind;
 
   return (
     <motion.div
@@ -30,10 +45,11 @@ export function DatabaseFlow({ notes, onSave, saving, savedNote }: DatabaseFlowP
       <h3 className="mb-3 text-sm font-semibold text-slate-500 uppercase tracking-wide">
         Database
       </h3>
-      <div className="mb-4 flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-700">
-        <span className="h-2 w-2 rounded-full bg-amber-500" />
-        SQLite — {notes.length} notes
+      <div className={`mb-1 flex items-center gap-2 rounded-lg border px-3 py-2 text-sm ${kindStyle}`}>
+        <span className="h-2 w-2 rounded-full bg-current opacity-60" />
+        {kindLabel} — {notes.length} notes
       </div>
+      <div className="mb-4 px-3 text-xs text-slate-400 truncate">{dbUrlLabel}</div>
 
       <form onSubmit={handleSubmit} className="flex gap-2">
         <input
