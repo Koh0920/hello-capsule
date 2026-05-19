@@ -6,9 +6,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
+import app.ai as ai
 import app.db as db
 import app.runtime as runtime
-from app.models import NoteCreate
+from app.models import ChatRequest, NoteCreate
 
 app = FastAPI(title="hello-capsule", version="0.2.0")
 
@@ -53,6 +54,16 @@ async def list_notes():
 @app.post("/api/notes", status_code=201)
 async def create_note(body: NoteCreate):
     return db.create_note(body.body)
+
+
+@app.post("/api/chat")
+async def chat(body: ChatRequest):
+    reply = ai.demo_reply(body.message)
+    return {
+        "mode": "demo",
+        "reply": reply,
+        "provider": "demo",
+    }
 
 
 @app.post("/api/reset", status_code=204)

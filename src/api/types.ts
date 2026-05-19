@@ -34,4 +34,5 @@ export interface ChatRequest {
 export interface ChatResponse {
   mode: "demo" | "local" | "api";
   reply: string;
+  provider: string;
 }

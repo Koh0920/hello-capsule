@@ -1,4 +1,4 @@
-import type { HealthResponse, RuntimeResponse, Note } from "./types";
+import type { HealthResponse, RuntimeResponse, Note, ChatResponse } from "./types";
 
 const BASE = "/api";
 
@@ -27,5 +27,12 @@ export function createNote(body: string) {
   return fetchJSON<Note>("/notes", {
     method: "POST",
     body: JSON.stringify({ body }),
+  });
+}
+
+export function postChat(message: string, mode: string = "demo") {
+  return fetchJSON<ChatResponse>("/chat", {
+    method: "POST",
+    body: JSON.stringify({ message, mode }),
   });
 }

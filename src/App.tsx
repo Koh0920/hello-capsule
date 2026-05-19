@@ -1,13 +1,16 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSceneMachine } from "./guide/scene-machine";
-import { getRuntime, getNotes, createNote } from "./api/client";
+import { getRuntime, getNotes, createNote, postChat } from "./api/client";
 import type { RuntimeResponse, Note } from "./api/types";
+import type { RobotMood } from "./guide/scenes";
 import { AppShell } from "./components/AppShell";
 import { BackgroundStage } from "./components/BackgroundStage";
 import { HeaderStatus } from "./components/HeaderStatus";
 import { RobotStage } from "./components/RobotStage";
 import { FloatingObjectsLayer } from "./components/FloatingObjectsLayer";
 import { BottomInteractionBar } from "./components/BottomInteractionBar";
+
+type ChatMode = "idle" | "thinking" | "talking" | "error";
 
 export default function App() {
   const {
@@ -24,6 +27,10 @@ export default function App() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [saving, setSaving] = useState(false);
   const [savedNote, setSavedNote] = useState<Note | null>(null);
+
+  const [chatMode, setChatMode] = useState<ChatMode>("idle");
+  const [chatReply, setChatReply] = useState<string | null>(null);
+  const [chatError, setChatError] = useState<string | null>(null);
 
   useEffect(() => {
     if (currentScene.id === "backend") {
@@ -52,12 +59,42 @@ export default function App() {
     }
   }, []);
 
+  const handleAsk = useCallback(async (message: string) => {
+    if (!message.trim() || chatMode === "thinking") return;
+    setChatMode("thinking");
+    setChatReply(null);
+    setChatError(null);
+    try {
+      const res = await postChat(message);
+      setChatReply(res.reply);
+      setChatMode("talking");
+      setTimeout(() => setChatMode("idle"), 3000);
+    } catch {
+      setChatError("Sorry, I couldn't reach the backend. Try again?");
+      setChatMode("error");
+      setTimeout(() => setChatMode("idle"), 3000);
+    }
+  }, [chatMode]);
+
   const handlePrimaryAction = useCallback(() => {
+    setChatReply(null);
+    setChatError(null);
+    setChatMode("idle");
     const action = currentScene.primaryAction?.action;
     if (action === "next") {
       next();
     }
   }, [currentScene.primaryAction, next]);
+
+  const robotMood: RobotMood = chatMode === "thinking"
+    ? "thinking"
+    : chatMode === "talking"
+      ? "happy"
+      : chatMode === "error"
+        ? "error"
+        : currentScene.robotMood;
+
+  const speech = chatError ?? chatReply ?? currentScene.speech;
 
   return (
     <>
@@ -72,9 +109,9 @@ export default function App() {
         }
         center={
           <RobotStage
-            mood={currentScene.robotMood}
-            talking={currentScene.id === "ai"}
-            speech={currentScene.speech}
+            mood={robotMood}
+            talking={chatMode === "thinking"}
+            speech={speech}
           />
         }
         objects={
@@ -91,10 +128,12 @@ export default function App() {
           <BottomInteractionBar
             primaryActionLabel={currentScene.primaryAction?.label}
             onPrimaryAction={handlePrimaryAction}
-            onNext={next}
-            onBack={back}
+            onNext={() => { setChatMode("idle"); setChatReply(null); next(); }}
+            onBack={() => { setChatMode("idle"); setChatReply(null); back(); }}
             isFirst={isFirst}
             isLast={isLast}
+            onAsk={handleAsk}
+            chatLoading={chatMode === "thinking"}
           />
         }
       />
