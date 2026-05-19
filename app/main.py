@@ -56,14 +56,30 @@ async def create_note(body: NoteCreate):
     return db.create_note(body.body)
 
 
+@app.get("/api/ai/modes")
+async def ai_modes():
+    return {
+        "modes": ai.get_available_modes(),
+        "default": ai.detect_default_mode(),
+    }
+
+
 @app.post("/api/chat")
 async def chat(body: ChatRequest):
-    reply = ai.demo_reply(body.message)
-    return {
-        "mode": "demo",
-        "reply": reply,
-        "provider": "demo",
-    }
+    mode = body.mode or "demo"
+    try:
+        reply = ai.reply(body.message, mode)
+        return {
+            "mode": mode,
+            "reply": reply,
+            "provider": mode,
+        }
+    except Exception as e:
+        return {
+            "mode": mode,
+            "reply": f"AI provider error: {str(e)[:200]}. Falling back to demo.",
+            "provider": "demo",
+        }
 
 
 @app.post("/api/reset", status_code=204)

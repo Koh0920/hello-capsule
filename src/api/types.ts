@@ -36,3 +36,15 @@ export interface ChatResponse {
   reply: string;
   provider: string;
 }
+
+export interface AiMode {
+  id: "demo" | "local" | "api";
+  label: string;
+  available: boolean;
+  description: string;
+}
+
+export interface AiModesResponse {
+  modes: AiMode[];
+  default: "demo" | "local" | "api";
+}

@@ -1,4 +1,4 @@
-import type { HealthResponse, RuntimeResponse, Note, ChatResponse } from "./types";
+import type { HealthResponse, RuntimeResponse, Note, ChatResponse, AiModesResponse } from "./types";
 
 const BASE = "/api";
 
@@ -28,6 +28,10 @@ export function createNote(body: string) {
     method: "POST",
     body: JSON.stringify({ body }),
   });
+}
+
+export function getAiModes() {
+  return fetchJSON<AiModesResponse>("/ai/modes");
 }
 
 export function postChat(message: string, mode: string = "demo") {

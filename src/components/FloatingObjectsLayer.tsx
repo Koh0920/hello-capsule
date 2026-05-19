@@ -1,6 +1,6 @@
 import { AnimatePresence } from "framer-motion";
 import type { FloatingObjectId } from "../guide/scenes";
-import type { RuntimeResponse, Note } from "../api/types";
+import type { RuntimeResponse, Note, AiMode } from "../api/types";
 import { CommandSnippet } from "./CommandSnippet";
 import { RuntimeCard } from "./RuntimeCard";
 import { FrontendCard } from "./FrontendCard";
@@ -15,34 +15,38 @@ interface FloatingObjectsLayerProps {
   onSaveNote?: (body: string) => void;
   saving?: boolean;
   savedNote?: Note | null;
+  aiModes?: AiMode[];
+  selectedAiMode?: string;
+  onSelectAiMode?: (id: string) => void;
 }
 
-function renderObject(
-  id: FloatingObjectId,
-  runtimeData?: RuntimeResponse | null,
-  notes?: Note[],
-  onSaveNote?: (body: string) => void,
-  saving?: boolean,
-  savedNote?: Note | null,
-) {
+type RenderCtx = FloatingObjectsLayerProps;
+
+function renderObject(id: FloatingObjectId, ctx: RenderCtx) {
   switch (id) {
     case "command":
       return <CommandSnippet />;
     case "runtime":
-      return <RuntimeCard data={runtimeData} />;
+      return <RuntimeCard data={ctx.runtimeData} />;
     case "frontend":
       return <FrontendCard />;
     case "database":
       return (
         <DatabaseFlow
-          notes={notes ?? []}
-          onSave={onSaveNote ?? (() => {})}
-          saving={saving ?? false}
-          savedNote={savedNote ?? null}
+          notes={ctx.notes ?? []}
+          onSave={ctx.onSaveNote ?? (() => {})}
+          saving={ctx.saving ?? false}
+          savedNote={ctx.savedNote ?? null}
         />
       );
     case "aiModes":
-      return <AiModesPanel />;
+      return (
+        <AiModesPanel
+          modes={ctx.aiModes ?? []}
+          selected={ctx.selectedAiMode ?? "demo"}
+          onSelect={ctx.onSelectAiMode ?? (() => {})}
+        />
+      );
     case "capsulePackage":
       return <CapsulePackageCard />;
     default:
@@ -50,19 +54,12 @@ function renderObject(
   }
 }
 
-export function FloatingObjectsLayer({
-  visibleObjects,
-  runtimeData,
-  notes,
-  onSaveNote,
-  saving,
-  savedNote,
-}: FloatingObjectsLayerProps) {
+export function FloatingObjectsLayer(props: FloatingObjectsLayerProps) {
   return (
     <div className="relative flex w-full max-w-4xl flex-wrap justify-center gap-6">
       <AnimatePresence mode="popLayout">
-        {visibleObjects.map((id) => (
-          <div key={id}>{renderObject(id, runtimeData, notes, onSaveNote, saving, savedNote)}</div>
+        {props.visibleObjects.map((id) => (
+          <div key={id}>{renderObject(id, props)}</div>
         ))}
       </AnimatePresence>
     </div>

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSceneMachine } from "./guide/scene-machine";
-import { getRuntime, getNotes, createNote, postChat } from "./api/client";
-import type { RuntimeResponse, Note } from "./api/types";
+import { getRuntime, getNotes, createNote, postChat, getAiModes } from "./api/client";
+import type { RuntimeResponse, Note, AiMode } from "./api/types";
 import type { RobotMood } from "./guide/scenes";
 import { AppShell } from "./components/AppShell";
 import { BackgroundStage } from "./components/BackgroundStage";
@@ -32,6 +32,9 @@ export default function App() {
   const [chatReply, setChatReply] = useState<string | null>(null);
   const [chatError, setChatError] = useState<string | null>(null);
 
+  const [aiModes, setAiModes] = useState<AiMode[]>([]);
+  const [selectedAiMode, setSelectedAiMode] = useState<string>("demo");
+
   useEffect(() => {
     if (currentScene.id === "backend") {
       getRuntime()
@@ -42,6 +45,17 @@ export default function App() {
       getNotes()
         .then(setNotes)
         .catch(() => setNotes([]));
+    }
+    if (currentScene.id === "ai") {
+      getAiModes()
+        .then((res) => {
+          setAiModes(res.modes);
+          setSelectedAiMode((prev) => {
+            const available = res.modes.find((m) => m.available && m.id === prev);
+            return available ? prev : res.default;
+          });
+        })
+        .catch(() => setAiModes([]));
     }
   }, [currentScene.id]);
 
@@ -65,7 +79,7 @@ export default function App() {
     setChatReply(null);
     setChatError(null);
     try {
-      const res = await postChat(message);
+      const res = await postChat(message, selectedAiMode);
       setChatReply(res.reply);
       setChatMode("talking");
       setTimeout(() => setChatMode("idle"), 3000);
@@ -122,6 +136,9 @@ export default function App() {
             onSaveNote={handleSaveNote}
             saving={saving}
             savedNote={savedNote}
+            aiModes={aiModes}
+            selectedAiMode={selectedAiMode}
+            onSelectAiMode={setSelectedAiMode}
           />
         }
         bar={

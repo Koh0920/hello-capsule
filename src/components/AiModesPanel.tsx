@@ -1,6 +1,19 @@
 import { motion } from "framer-motion";
+import type { AiMode } from "../api/types";
 
-export function AiModesPanel() {
+interface AiModesPanelProps {
+  modes: AiMode[];
+  selected: string;
+  onSelect: (id: string) => void;
+}
+
+const modeColors: Record<string, { active: string; label: string }> = {
+  demo: { active: "bg-blue-50 text-blue-700 border-blue-200", label: "Active" },
+  local: { active: "bg-green-50 text-green-700 border-green-200", label: "Active" },
+  api: { active: "bg-purple-50 text-purple-700 border-purple-200", label: "Active" },
+};
+
+export function AiModesPanel({ modes, selected, onSelect }: AiModesPanelProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 16, scale: 0.96 }}
@@ -13,9 +26,16 @@ export function AiModesPanel() {
         AI Modes
       </h3>
       <div className="space-y-2">
-        <ModeChip label="Demo" active color="blue" />
-        <ModeChip label="Local (Ollama)" active={false} color="green" />
-        <ModeChip label="API (OpenAI)" active={false} color="purple" />
+        {modes.map((m) => (
+          <ModeChip
+            key={m.id}
+            label={m.label}
+            description={m.description}
+            active={m.id === selected}
+            available={m.available}
+            onClick={() => m.available && onSelect(m.id)}
+          />
+        ))}
       </div>
     </motion.div>
   );
@@ -23,26 +43,35 @@ export function AiModesPanel() {
 
 function ModeChip({
   label,
+  description,
   active,
-  color,
+  available,
+  onClick,
 }: {
   label: string;
+  description: string;
   active: boolean;
-  color: "blue" | "green" | "purple";
+  available: boolean;
+  onClick: () => void;
 }) {
-  const colors = {
-    blue: "bg-blue-50 text-blue-700 border-blue-200",
-    green: "bg-green-50 text-green-700 border-green-200",
-    purple: "bg-purple-50 text-purple-700 border-purple-200",
-  };
+  const base = "flex flex-col rounded-lg border px-3 py-2 text-sm transition-colors";
+  const cursor = available ? "cursor-pointer" : "cursor-default opacity-50";
+  const color = modeColors[label.split(" ")[0].toLowerCase()] ?? modeColors.demo;
+
   return (
-    <div
-      className={`flex items-center justify-between rounded-lg border px-3 py-2 text-sm transition-colors ${
-        active ? colors[color] : "border-slate-100 bg-slate-50 text-slate-400"
-      }`}
-    >
-      <span>{label}</span>
-      {active && <span className="text-xs font-medium">Active</span>}
-    </div>
+    <button type="button" onClick={onClick} disabled={!available}>
+      <div
+        className={`${base} ${cursor} ${
+          active ? color.active : "border-slate-100 bg-slate-50 text-slate-400"
+        }`}
+      >
+        <span className="flex items-center justify-between">
+          <span className="font-medium">{label}</span>
+          {active && <span className="text-xs font-medium">Active</span>}
+          {!available && <span className="text-xs">N/A</span>}
+        </span>
+        <span className="mt-0.5 text-xs opacity-60">{description}</span>
+      </div>
+    </button>
   );
 }
