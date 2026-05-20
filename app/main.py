@@ -33,6 +33,11 @@ async def health():
     }
 
 
+@app.get("/health")
+async def health_alias():
+    return await health()
+
+
 @app.get("/api/runtime")
 async def get_runtime():
     return runtime.get_runtime_info()
