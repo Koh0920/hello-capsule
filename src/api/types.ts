@@ -14,37 +14,31 @@ export interface RuntimeResponse {
 }
 
 export interface DatabaseResponse {
-  kind: "sqlite" | "postgres";
+  kind: "sqlite";
   url_label: string;
-  notes_count: number;
-  postgres_enabled: boolean;
+  hello_count: number;
 }
 
-export interface Note {
-  id: number;
-  body: string;
-  created_at: string;
-}
-
-export interface ChatRequest {
-  message: string;
-  mode: "demo" | "local" | "api";
-}
-
-export interface ChatResponse {
-  mode: "demo" | "local" | "api";
-  reply: string;
-  provider: string;
-}
-
-export interface AiMode {
-  id: "demo" | "local" | "api";
+export interface HelloStep {
+  id: string;
+  at: string;
+  delta_ms: number;
   label: string;
-  available: boolean;
-  description: string;
 }
 
-export interface AiModesResponse {
-  modes: AiMode[];
-  default: "demo" | "local" | "api";
+export interface HelloResponse {
+  message: string;
+  run_id: string;
+  started_at: string;
+  finished_at: string;
+  duration_ms: number;
+  steps: HelloStep[];
+  runtime: RuntimeResponse;
+  database: DatabaseResponse;
+}
+
+export interface HelloHistoryItem {
+  id: number;
+  run_id: string;
+  created_at: string;
 }

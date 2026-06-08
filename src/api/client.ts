@@ -1,4 +1,10 @@
-import type { HealthResponse, RuntimeResponse, Note, ChatResponse, AiModesResponse, DatabaseResponse } from "./types";
+import type {
+  DatabaseResponse,
+  HealthResponse,
+  HelloHistoryItem,
+  HelloResponse,
+  RuntimeResponse,
+} from "./types";
 
 const BASE = "/api";
 
@@ -23,24 +29,14 @@ export function getDatabase() {
   return fetchJSON<DatabaseResponse>("/database");
 }
 
-export function getNotes() {
-  return fetchJSON<Note[]>("/notes");
+export function sayHello() {
+  return fetchJSON<HelloResponse>("/hello", { method: "POST" });
 }
 
-export function createNote(body: string) {
-  return fetchJSON<Note>("/notes", {
-    method: "POST",
-    body: JSON.stringify({ body }),
-  });
+export function getHelloHistory(limit = 20) {
+  return fetchJSON<HelloHistoryItem[]>(`/hello/history?limit=${limit}`);
 }
 
-export function getAiModes() {
-  return fetchJSON<AiModesResponse>("/ai/modes");
-}
-
-export function postChat(message: string, mode: string = "demo") {
-  return fetchJSON<ChatResponse>("/chat", {
-    method: "POST",
-    body: JSON.stringify({ message, mode }),
-  });
+export async function resetState(): Promise<void> {
+  await fetch(`${BASE}/reset`, { method: "POST" });
 }

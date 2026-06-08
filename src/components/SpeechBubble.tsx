@@ -8,14 +8,13 @@ export function SpeechBubble({ text }: SpeechBubbleProps) {
   return (
     <motion.div
       key={text}
-      initial={{ opacity: 0, y: 12, scale: 0.95 }}
+      initial={{ opacity: 0, y: 8, scale: 0.96 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -8, scale: 0.95 }}
-      transition={{ duration: 0.35, ease: "easeOut" }}
-      className="relative max-w-md rounded-2xl bg-white px-6 py-4 shadow-lg"
+      transition={{ duration: 0.25, ease: "easeOut" }}
+      className="relative max-w-md rounded-2xl bg-white px-5 py-2.5 text-sm text-slate-700 shadow-md ring-1 ring-slate-200"
     >
-      <p className="text-lg leading-relaxed text-gray-700">{text}</p>
-      <div className="absolute -bottom-2 left-8 h-4 w-4 rotate-45 bg-white" />
+      {text}
+      <div className="absolute -top-1.5 left-8 h-3 w-3 rotate-45 bg-white ring-1 ring-slate-200" />
     </motion.div>
   );
 }
