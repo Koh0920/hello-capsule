@@ -1,6 +1,6 @@
 schema_version = "0.3"
 name = "hello-capsule"
-version = "0.2.0"
+version = "0.3.0"
 type = "app"
 default_target = "main"
 
@@ -14,17 +14,11 @@ run = "python -m uvicorn app.main:app --host 127.0.0.1"
 
 [isolation]
 allow_env = [
-    "DATABASE_URL",
-    "OPENAI_API_KEY",
-    "OPENAI_BASE_URL",
-    "OPENAI_MODEL",
-    "OLLAMA_BASE_URL",
-    "OLLAMA_MODEL"
+    "DATABASE_URL"
 ]
 
 [network]
 egress_allow = [
-    "api.openai.com",
     "localhost",
     "127.0.0.1"
 ]
