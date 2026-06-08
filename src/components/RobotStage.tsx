@@ -1,23 +1,21 @@
-import { AnimatePresence } from "framer-motion";
-import type { RobotMood } from "../guide/scenes";
-import { RobotAdapter } from "../robot/RobotAdapter";
+import { SvgRobot } from "../robot/SvgRobot";
+import type { RobotMood } from "../robot/SvgRobot";
 import { SpeechBubble } from "./SpeechBubble";
 
 interface RobotStageProps {
   mood: RobotMood;
-  talking: boolean;
-  speech: string;
+  message?: string | null;
+  speech?: string;
 }
 
-export function RobotStage({ mood, talking, speech }: RobotStageProps) {
+const FIXED_SPEECH = "Press the button.";
+
+export function RobotStage({ mood, message, speech }: RobotStageProps) {
+  const text = message ?? speech ?? FIXED_SPEECH;
   return (
-    <div className="flex flex-col items-center gap-6">
-      <RobotAdapter mood={mood} talking={talking} />
-      <div className="relative">
-        <AnimatePresence mode="wait">
-          <SpeechBubble key={speech} text={speech} />
-        </AnimatePresence>
-      </div>
+    <div className="flex flex-col items-center gap-3">
+      <SvgRobot mood={mood} size={96} />
+      <SpeechBubble text={text} />
     </div>
   );
 }
