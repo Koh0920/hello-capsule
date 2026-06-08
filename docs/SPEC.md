@@ -1,202 +1,259 @@
-# Capsule Guide 仕様書
+# Hello Capsule 仕様書
 
 ## 1. 目的
 
-`hello-capsule` を、単なる静的HTMLサンプルから **Atoの機能を体験的に紹介するインタラクティブ capsule** に拡張する。
+`hello-capsule` は **"Hello" 1語を過剰設計された方法で返すだけのアプリ**。
 
-ユーザーはロボットガイドと対話しながら、次を理解できる。
-
-1. GitHub repo から capsule を起動できる
-2. Python backend が起動している
-3. HTML frontend が backend API を叩いている
-4. SQLite / Postgres に state を保存できる
-5. Demo AI / Local AI / API AI を切り替えられる
-6. この構成を capsule として共有できる
-
-## 2. プロダクトコンセプト
-
-名称は **Capsule Guide**。
+React フロントエンド、Python FastAPI バックエンド、SQLite データベース、runtime イントロスペクションを経由して1つの "Hello" を生成し、その経路を実タイムスタンプ付きのトレースとして可視化する。
 
 キャッチコピー:
 
 ```
-A tiny guided app that shows what a capsule can do.
+A tiny showcase capsule that says hello in a very complicated way.
 ```
 
-画面は固定ダッシュボードではなく、**ロボットが中央で案内するインタラクティブなステージ** とする。
+## 2. プロダクトコンセプト
 
-## 3. 推奨スタック
+- 「capsule の説明」はしない。アプリは自身のパッケージ構造に言及しない。
+- 見た目は「Say hello」ボタン1つのシングル画面。押すとデータ経路図がアニメーションする。
+- ジョーク/スコア要素は入れない。データを淡々と、本物のタイムスタンプで見せる。
+
+## 3. スタック
 
 ```
 Frontend:
-  Vite / React / TypeScript / Framer Motion / Tailwind CSS / Rive React runtime (後続導入)
+  Vite / React / TypeScript / Framer Motion / Tailwind CSS
 
 Backend:
-  Python / FastAPI / SQLite (default) / Postgres (optional) / Ollama (optional) / OpenAI-compatible API (optional)
+  Python / FastAPI / SQLite (default) / Postgres (optional via DATABASE_URL)
 
-Avatar:
-  v0.1 inline SVG + CSS animation
-  v0.2 Rive
-  v0.3 Three.js experimental
+Robot:
+  SVG (3 mood: idle / running / delivered)
 ```
 
-## 4. ロボット表現
+## 4. API サーフェス
 
-### v0.1
-
-SVG + CSS animation。以下の状態を持つ:
-
-```
-idle / hello / talking / thinking / pointing_left / pointing_right / happy / error
-```
-
-### v0.2
-
-Rive に置き換え。State Machine: `GuideRobot`
-
-### GIF / MP4 / WebM
-
-主役のロボットには使わない。補助的用途に限定。
-
-## 5. 画面構成
-
-```
-AppShell
-  BackgroundStage
-  HeaderStatus
-  RobotStage
-    RobotAvatar
-    SpeechBubble
-  FloatingObjectsLayer
-    CommandSnippet / RuntimeCard / FrontendCard / DatabaseFlow / AiModesPanel / CapsulePackageCard
-  BottomInteractionBar
-```
-
-### レイアウト原則
-
-- 中央: ロボット
-- 周辺: scene ごとの浮遊オブジェクト (Framer Motion で表示)
-- 右上: status chips
-- 下部: 入力欄 + Ask me + Next
-- 背景: 白〜薄いグレー、余白多め
-
-## 6. シーン設計
-
-```typescript
-type SceneId =
-  | "intro" | "command" | "backend" | "frontend"
-  | "database" | "ai" | "capsule" | "finish";
-```
-
-| Scene | 目的 | 表示 |
-|-------|------|------|
-| intro | ロボット登場 | RobotAvatar + SpeechBubble |
-| command | GitHub repo から起動 | CommandSnippet |
-| backend | Python backend 稼働確認 | RuntimeCard + ApiPulse |
-| frontend | Frontend↔Backend 通信 | FrontendCard + BrowserPreview |
-| database | State 保存 | DatabaseFlow + NoteForm + SavedNotes |
-| ai | Demo/Local/API AI | AiModesPanel + ChatInput |
-| capsule | 構成全体を共有 | CapsulePackageCard + Checklist |
-| finish | 再実行・共有・拡張へ誘導 | RunCommand + CopyButton |
-
-## 7. Floating Object 一覧
-
-```
-command / runtime / apiPulse / frontend / database / noteForm / aiModes / chat / capsulePackage
-```
-
-アニメーション:
-
-```
-initial: { opacity: 0, y: 16, scale: 0.96 }
-animate: { opacity: 1, y: 0, scale: 1 }
-exit: { opacity: 0, y: -8, scale: 0.98 }
-transition: { duration: 0.36, ease: "easeOut" }
-```
-
-## 8. Bottom Interaction Bar
-
-常時表示。構成:
-
-```
-[Robot mini face] [Ask me anything...] [Ask me] [Next]
-```
-
-## 9. Backend API
-
-| Method | Path | 説明 |
+| Method | Path | 用途 |
 |--------|------|------|
-| GET | `/api/health` | Health check |
-| GET | `/api/runtime` | Runtime info |
-| GET | `/api/database` | DB 種類・状態 |
-| GET | `/api/notes` | Note一覧 |
-| POST | `/api/notes` | Note作成 |
-| POST | `/api/chat` | AIチャット |
-| POST | `/api/reset` | Stateリセット |
+| GET | `/api/health` | ヘルスチェック |
+| GET | `/api/runtime` | Python バージョン、platform、uptime |
+| GET | `/api/database` | DB kind、URL label、hello_count |
+| POST | `/api/hello` | Hello Engine — トレース付きレスポンス |
+| GET | `/api/hello/history?limit=N` | 直近 N 件 |
+| POST | `/api/reset` | hello_events 全削除 |
 
-## 10. DB 仕様
+### POST /api/hello レスポンス
 
-デフォルト: SQLite (`sqlite:///data/hello-capsule.db`)
+```json
+{
+  "message": "Hello from an over-engineered app.",
+  "run_id": "7c2e3a4f9b1d",
+  "started_at": "2026-06-08T08:42:11.237Z",
+  "finished_at": "2026-06-08T08:42:11.243Z",
+  "duration_ms": 6,
+  "steps": [
+    { "id": "request_received", "at": "2026-06-08T08:42:11.237Z", "delta_ms": 0, "label": "Server received request" },
+    { "id": "runtime_read",     "at": "2026-06-08T08:42:11.238Z", "delta_ms": 1, "label": "Read runtime info" },
+    { "id": "db_write",         "at": "2026-06-08T08:42:11.241Z", "delta_ms": 4, "label": "Wrote event to SQLite" },
+    { "id": "db_count_read",    "at": "2026-06-08T08:42:11.242Z", "delta_ms": 5, "label": "Read event count" },
+    { "id": "response_ready",   "at": "2026-06-08T08:42:11.243Z", "delta_ms": 6, "label": "Response assembled" }
+  ],
+  "runtime":  { "python": "3.11.x", "platform": "darwin", "arch": "arm64", "port": 8000, "uptime_seconds": 12 },
+  "database": { "kind": "sqlite", "url_label": "data/hello.db", "hello_count": 8 }
+}
+```
 
-`DATABASE_URL` 設定時: Postgres
+`steps` の各 `at` はサーバ側で `time.time()` → ISO 8601 に変換。`delta_ms` はリクエスト開始からの累積ミリ秒で単調増加する。
+
+`run_id` は `uuid4().hex[:12]` の12桁 hex。
+
+## 5. データ経路図 (DataFlowDiagram)
+
+SVG で描画。4 ノード構成:
+
+```
+[ Browser ]  ←──→  [ Server ]
+                     ╱      ╲
+              [ Runtime ]  [ SQLite ]
+```
+
+各ノード間のライン上を、対応する phase でパケット(<circle>)がアニメーションする。
+
+### Phase 遷移
+
+```
+user click → client_send → server_recv → runtime_read
+           → db_write → db_count → server_send
+           → client_recv → done
+```
+
+各 phase の持続時間は固定(60-220ms)。合計 ~1360ms。
+
+| Phase | 持続 | 見え方 |
+|-------|------|--------|
+| client_send | 220ms | Browser → Server ライン上をパケットが移動 |
+| server_recv | 60ms  | Server ノードが点灯 |
+| runtime_read | 200ms | Server → Runtime ラインにパケット |
+| db_write | 200ms | Server → SQLite ラインにパケット |
+| db_count | 200ms | SQLite → Server ラインにパケット |
+| server_send | 220ms | Server → Browser ライン上をパケットが移動 |
+| client_recv | 80ms  | Browser ノードにメッセージ表示 |
+| done | — | ロボットが happy, History を再取得 |
+
+### ノード表示
+
+各ノードは白地で枠線がアクティブ時にカラーに変わる。内容:
+- Browser: サブラベル "React"、完了時に `message` が表示される枠
+- Server: サブラベル "FastAPI"、サーバ処理時間
+- Runtime: サブラベル "inspector"、`phase === "runtime_read"` で "reading"
+- SQLite: サブラベル "hello_events"、`phase === "db_write"` で "insert"、`phase === "db_count"` で "count"
+
+## 6. トレース (TraceTimeline)
+
+`POST /api/hello` のレスポンスから生成。8行のログ:
+
+```
+HH:MM:SS.mmm  +0ms   Client sent POST /api/hello              [client]
+HH:MM:SS.mmm  +Nms   Server received request                  [server]
+HH:MM:SS.mmm  +Nms   Read runtime info                        [server]
+HH:MM:SS.mmm  +Nms   Wrote event to SQLite                    [server]
+HH:MM:SS.mmm  +Nms   Read event count                         [server]
+HH:MM:SS.mmm  +Nms   Response assembled                       [server]
+HH:MM:SS.mmm  +Mms   Client received hello                    [client]
+───
+round trip Mms · server Nms
+```
+
+1-2行目はクライアント側で `performance.now()` から生成(Client sent / Client received)。3-7行目はサーバ応答の `steps`。
+
+各行の `at` はサーバの実タイムスタンプ(ISO 8601)、`delta_ms` もサーバの実計測値。origin バッジで発行元(client/server)を区別。
+
+下部にラウンドトリップ時間(client_recv − client_send)とサーバ処理時間(server finished − server started)を表示。
+
+## 7. 画面構成
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│ Hello                              SQLite · 8 hellos · 12s   │
+├──────────────────────────────────────────────────────────────┤
+│                                                              │
+│            [ SVG Robot  idle | running | delivered ]          │
+│            "Press the button."                               │
+│                                                              │
+│            [      Say hello      ]                           │
+│                                                              │
+│  ┌──── DataFlowDiagram ────────────────────────────┐          │
+│  │   Browser ←──→ Server → Runtime / SQLite        │          │
+│  └─────────────────────────────────────────────────┘          │
+│                                                              │
+│  Trace                                        round trip ... │
+│  HH:MM:SS.mmm  +Nms  Label  [client|server]                  │
+│  ...                                                          │
+│                                                              │
+│  ┌─ RuntimeCard ──┐  ┌─ DatabaseCard ──┐                     │
+│  │ Python 3.11.x  │  │ SQLite          │                     │
+│  │ Port 8000      │  │ 8 hellos        │                     │
+│  │ Uptime 12s     │  │ data/hello.db   │                     │
+│  └────────────────┘  └─────────────────┘                     │
+│                                                              │
+│  Recent hellos                                               │
+│  #3  HH:MM:SS  run_id                                        │
+│  #2  HH:MM:SS  run_id                                        │
+│  #1  HH:MM:SS  run_id                                        │
+│                                    [ Reset history ]         │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### ロボット mood
+
+| mood | 条件 | 見え方 |
+|------|------|--------|
+| `idle` | phase === "idle" | 青色、静止 |
+| `running` | phase が進行中 | 橙色、`animate-pulse` |
+| `delivered` | phase === "done" | 緑色、腕が開く、glow |
+
+speech は固定「Press the button.」のみ。完了時はメッセージ "Hello from an over-engineered app." を表示。
+
+## 8. Hello Engine 設計
+
+`app/hello.py` は以下のフローで HelloResponse を生成する:
+
+1. `time.time()` でスタート時刻 `t0` を取得
+2. step #1: "request_received" — 即座に記録
+3. `app.runtime.get_runtime_info()` を呼び出し → step #2: "runtime_read"
+4. `uuid4().hex[:12]` で run_id 生成
+5. `app.db.record_hello(run_id)` で insert + count → step #3: "db_write" (before call), step #4: "db_count_read" (after call)
+6. step #5: "response_ready"
+7. `time.time()` で終了時刻 `t1` を取得
+8. HelloResponse に詰めて返す
+
+各 step の `at` は `datetime.fromtimestamp(t, tz=timezone.utc).isoformat(timespec="milliseconds")`。
+
+## 9. DB 仕様
+
+SQLite のみ(Postgres は DATABASE_URL で切替可能だが、コード上は `record_hello`, `count_hellos`, `list_hellos`, `reset_hellos` の4関数だけの薄いラッパ)。
 
 ```sql
-create table if not exists notes (
-  id integer primary key,
-  body text not null,
-  created_at text not null
-);
-
-create table if not exists guide_events (
-  id integer primary key,
-  event_type text not null,
-  payload_json text,
-  created_at text not null
+CREATE TABLE IF NOT EXISTS hello_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    run_id TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 ```
 
-## 11. AI 仕様
+`id` は内部的に使用。`run_id` は12桁の hex で UI に表示される。
 
-初回起動は必ず `demo` モード。
+`init_db()` 内で `DROP TABLE IF EXISTS notes` / `DROP TABLE IF EXISTS guide_events` を実行し、旧スキーマのテーブルを削除する。
 
-- **demo**: 固定応答、外部接続なし
-- **local**: Ollama-compatible API
-- **api**: OpenAI-compatible API (要 `OPENAI_API_KEY`)
-
-優先順位: 明示指定 > API key > Ollama > demo
-
-## 12. フロントエンド構成
+## 10. フロントエンド構成
 
 ```
 src/
-  main.tsx
-  App.tsx
-  api/        client.ts, types.ts
-  guide/      scenes.ts, scene-machine.ts
-  robot/      RobotAdapter.tsx, SvgRobot.tsx, RiveRobot.tsx
-  components/ AppShell, HeaderStatus, BackgroundStage, RobotStage,
-              SpeechBubble, FloatingObjectsLayer, CommandSnippet,
-              RuntimeCard, FrontendCard, DatabaseFlow, AiModesPanel,
-              CapsulePackageCard, BottomInteractionBar
+  main.tsx               # Entry point (unused)
+  index.css              # @import "tailwindcss"
+  App.tsx                # Mounts <HelloMachine />
+  api/
+    client.ts            # fetch wrappers
+    types.ts             # TS types matching backend Pydantic
+  robot/
+    SvgRobot.tsx         # SVG robot with 3 moods
+  components/
+    HelloMachine.tsx     # State machine + layout assembly
+    DataFlowDiagram.tsx  # SVG node graph + packet animation
+    Packet.tsx           # Animated <circle> for data path
+    TraceTimeline.tsx    # rowsFromResponse() + UI
+    RuntimeCard.tsx      # Runtime info panel
+    DatabaseCard.tsx     # Database info panel
+    HelloHistory.tsx     # Recent hello events list
+    ResetButton.tsx      # Clear history button
+    AppShell.tsx         # Page shell
+    BackgroundStage.tsx  # Background gradient
+    HeaderStatus.tsx     # dbKind + helloCount + uptime
+    RobotStage.tsx       # SVG robot + speech bubble
+    SpeechBubble.tsx     # Animated speech bubble
 ```
 
-## 13. Backend 構成
+## 11. Backend 構成
 
 ```
 app/
-  main.py, db.py, models.py, ai.py, runtime.py, settings.py
-data/
-  .gitkeep
+  __init__.py
+  main.py            # FastAPI routes + static serve + self-heal build
+  hello.py           # Hello Engine
+  db.py              # SQLite hello_events
+  models.py          # Pydantic schemas
+  runtime.py         # Runtime info
+  settings.py        # Environment config (DATABASE_URL, PORT)
 ```
 
-FastAPI が frontend build output を static serve する。
+FastAPI が `dist/` を static serve する。`dist/` が存在しない場合の自己修復ビルド機能あり。
 
-## 14. capsule.toml 方針
+## 12. capsule.toml 方針
 
 ```toml
 schema_version = "0.3"
 name = "hello-capsule"
-version = "0.2.0"
+version = "0.3.0"
 type = "app"
 default_target = "main"
 
@@ -206,42 +263,28 @@ driver = "python"
 runtime_version = "3.11"
 runtime_tools = { node = "20" }
 build = "npm install && npm run build"
-run = "python -m uvicorn app.main:app --host 127.0.0.1 --port 8000"
-port = 8000
+run = "python -m uvicorn app.main:app --host 127.0.0.1"
 
 [isolation]
-allow_env = ["DATABASE_URL", "OPENAI_API_KEY", "OPENAI_BASE_URL", "OPENAI_MODEL", "OLLAMA_BASE_URL", "OLLAMA_MODEL"]
+allow_env = ["DATABASE_URL"]
 
 [network]
-egress_allow = ["api.openai.com", "localhost", "127.0.0.1"]
+egress_allow = ["localhost", "127.0.0.1"]
 ```
 
-## 15. 実装フェーズ
+AI 関連の env (OPENAI_API_KEY など) と egress (api.openai.com) は削除。capsule は外部ネットワークに依存しない。
 
-| Phase | 内容 | 成功条件 |
-|-------|------|---------|
-| 1 | Scene UI skeleton (Vite + React + TS + Tailwind + Framer Motion + SVG robot) | Next で全 scene 遷移、ロボット表情変化、アニメーション表示 |
-| 2 | FastAPI backend (health, runtime, static serve) | Backend scene で実API結果表示 |
-| 3 | SQLite state (notes CRUD) | Note保存・永続化・保存演出 |
-| 4 | Demo AI (POST /api/chat) | Ask me でロボット応答 |
-| 5 | Optional Local/API AI | 未設定でも壊れない、設定時のみ有効 |
-| 6 | Postgres optional (DATABASE_URL) | DB種別に応じた自動切替 |
-| 7 | Rive robot | RobotAvatar の差し替えが既存 scene と独立 |
+## 13. 実装履歴
 
-最初のPRでは **Phase 1〜3** を目標とする。
+- Phase 1: Backend rewrite — AI chat → Hello Engine (PR #2)
+- Phase 2: Frontend rewrite — 8-scene guide → single-screen HelloMachine (PR #3)
+- Phase 3: Manifest + docs — capsule.toml env trim, README/SPEC rewrite (PR #4)
 
-## 16. 非目標 (初期版)
+## 14. 非目標
 
-- 本格的な3D avatar
-- WebGPU依存
-- ブラウザ内Wasm DB完結
-- 複雑なAI agent workflow
 - ユーザー認証
 - クラウド同期
-- Ato Desktop native UI化
-
-## 17. 判断まとめ
-
-**採用**: React + Framer Motion / Python + FastAPI / SQLite (default) / Postgres (optional) / Demo AI (default) / Ollama/API (optional) / SVG robot (first) / Rive robot (later)
-
-**不採用**: GIF/動画を主avatarにする / 初手からThree.js 3D / Wasm中心構成 / Native GPUI capsule化
+- WebGPU / Wasm
+- AI / LLM 統合
+- Rive / Three.js 3D アバター
+- "capsule" の自己言及
