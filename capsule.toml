@@ -9,8 +9,11 @@ runtime = "source"
 driver = "python"
 runtime_version = "3.11"
 runtime_tools = { node = "20" }
+# Declared server port: lets Ato synthesize an honest TCP readiness probe
+# (the runtime reports Ready only after this port actually accepts).
+port = 8000
 build = "npm install && npm run build"
-run = "python -m uvicorn app.main:app --host 127.0.0.1"
+run = "python -m uvicorn app.main:app --host 127.0.0.1 --port 8000"
 
 [isolation]
 allow_env = [
