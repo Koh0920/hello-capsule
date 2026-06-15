@@ -25,3 +25,12 @@ egress_allow = [
     "localhost",
     "127.0.0.1"
 ]
+
+# Managed Cloud web target — a dependency-free Node server honoring $PORT.
+# The MVP Managed Cloud runner (node:20-alpine, no build) starts this, injects
+# PORT, probes 127.0.0.1:port, and serves it at /__ato_app/.
+[targets.web]
+runtime = "source"
+runtime_version = "20"
+run = "node server.js"
+port = 3000
